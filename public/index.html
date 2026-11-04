@@ -1,0 +1,255 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FloorReel AI | Luxury Interior Studio</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#10100f;color:#f5f0e7;
+  font-family:Arial,sans-serif;
+  min-height:100vh;
+}
+header{
+  padding:24px 7%;display:flex;
+  justify-content:space-between;align-items:center;
+  border-bottom:1px solid #34312a;
+}
+.logo{font-size:23px;font-weight:800;letter-spacing:2px}
+.logo span{color:#c7a66a}
+.tag{color:#aaa;font-size:12px;letter-spacing:2px}
+main{max-width:1050px;margin:45px auto;padding:0 22px}
+.intro{text-align:center;margin-bottom:35px}
+.intro h1{font-size:clamp(32px,6vw,55px);margin-bottom:12px}
+.intro h1 span{color:#c7a66a}
+.intro p{color:#aaa;line-height:1.7}
+.panel{
+  background:#191917;border:1px solid #39352d;
+  border-radius:16px;padding:25px;margin-bottom:22px;
+}
+h2{font-size:19px;margin-bottom:18px}
+label{display:block;color:#c9c2b5;font-size:13px;margin-bottom:8px}
+input,select{
+  width:100%;padding:14px;background:#10100f;
+  border:1px solid #484238;border-radius:8px;
+  color:white;margin-bottom:17px;font-size:14px;
+}
+.types{display:flex;gap:12px;margin-bottom:20px}
+.type{
+  flex:1;padding:15px;border:1px solid #484238;
+  border-radius:9px;text-align:center;cursor:pointer;
+  color:#bbb;background:#111;
+}
+.type.active{border-color:#c7a66a;color:#e6c68c;background:#292319}
+.upload{
+  border:1px dashed #8a7754;border-radius:12px;
+  padding:30px;text-align:center;cursor:pointer;
+  color:#c9b994;background:#14130f;
+}
+.upload input{display:none}
+#preview{display:none;max-width:100%;max-height:260px;
+  margin:18px auto 0;border-radius:9px}
+button{
+  background:#c7a66a;color:#17130c;border:0;
+  padding:15px 22px;border-radius:8px;
+  font-size:15px;font-weight:700;cursor:pointer;
+}
+button:disabled{opacity:.5;cursor:not-allowed}
+.primary{width:100%;margin-top:20px}
+.status{margin-top:18px;color:#d7bd8d;text-align:center;
+  line-height:1.6;font-size:14px}
+.scenes{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+}
+.scene{background:#111;border:1px solid #39352d;
+  border-radius:12px;overflow:hidden}
+.scene img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover}
+.scene h3{padding:13px;font-size:14px}
+.scene p{padding:0 13px 14px;color:#aaa;font-size:12px}
+#results{display:none}
+footer{text-align:center;color:#777;padding:35px;font-size:12px}
+@media(max-width:650px){
+  .scenes{grid-template-columns:1fr}
+  .scene img{max-height:500px;object-fit:contain;background:#080808}
+  header{padding:20px}
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="logo">FLOOR<span>REEL</span> AI</div>
+  <div class="tag">LUXURY INTERIOR STUDIO</div>
+</header>
+
+<main>
+  <section class="intro">
+    <h1>Transform Products Into <span>Luxury.</span></h1>
+    <p>Create beautiful AI-generated interior scenes for your flooring<br>
+    and PVC wall-panel business.</p>
+  </section>
+
+  <section class="panel">
+    <h2>01 — Brand Identity</h2>
+
+    <label>Company name</label>
+    <input id="company" value="Royal Flooring"
+      placeholder="Enter company name">
+
+    <label>Company tagline</label>
+    <input id="tagline" value="Complete interior solutions"
+      placeholder="Enter your tagline">
+  </section>
+
+  <section class="panel">
+    <h2>02 — Select Your Product</h2>
+
+    <div class="types">
+      <div class="type active" id="flooring"
+        onclick="chooseType('Flooring')">Flooring</div>
+      <div class="type" id="wall"
+        onclick="chooseType('PVC Wall Panel')">PVC Wall Panel</div>
+    </div>
+
+    <label>Upload your product photograph</label>
+    <label class="upload" for="productImage">
+      <strong>＋ Choose Product Image</strong>
+      <p style="margin-top:9px;font-size:12px">
+        JPG, PNG or WebP · Maximum 10 MB
+      </p>
+      <input type="file" id="productImage"
+        accept="image/png,image/jpeg,image/webp">
+      <img id="preview" alt="Product preview">
+    </label>
+
+    <button class="primary" id="generate" onclick="generateScenes()">
+      GENERATE LUXURY INTERIORS
+    </button>
+
+    <div class="status" id="status">
+      Upload your product image to begin.
+    </div>
+  </section>
+
+  <section class="panel" id="results">
+    <h2>03 — Your Generated Interiors</h2>
+    <p style="color:#aaa;font-size:13px;margin-bottom:20px">
+      Preview your three AI-generated interior scenes.
+    </p>
+
+    <div class="scenes">
+      <div class="scene">
+        <img id="hall" alt="Luxury living hall">
+        <h3>Luxury Living Hall</h3>
+        <p>Elegant living space</p>
+      </div>
+      <div class="scene">
+        <img id="bedroom" alt="Luxury bedroom">
+        <h3>Luxury Bedroom</h3>
+        <p>Premium bedroom design</p>
+      </div>
+      <div class="scene">
+        <img id="bathroom" alt="Luxury bathroom">
+        <h3>Luxury Bathroom</h3>
+        <p>Modern bathroom design</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>FLOORREEL AI · CREATE. INSPIRE. TRANSFORM.</footer>
+
+<script>
+let productType = "Flooring";
+let selectedFile = null;
+
+function chooseType(type){
+  productType = type;
+  document.getElementById("flooring").classList.toggle(
+    "active",type === "Flooring"
+  );
+  document.getElementById("wall").classList.toggle(
+    "active",type === "PVC Wall Panel"
+  );
+}
+
+document.getElementById("productImage").addEventListener("change",e=>{
+  const file = e.target.files[0];
+  if(!file)return;
+
+  if(file.size > 10*1024*1024){
+    alert("Please choose an image smaller than 10 MB.");
+    e.target.value="";
+    return;
+  }
+
+  selectedFile=file;
+  const preview=document.getElementById("preview");
+  preview.src=URL.createObjectURL(file);
+  preview.style.display="block";
+  document.getElementById("status").textContent=
+    "Product image ready. You can generate your scenes.";
+});
+
+async function generateScenes(){
+  const status=document.getElementById("status");
+  const button=document.getElementById("generate");
+
+  if(!selectedFile){
+    status.textContent="Please upload a product image first.";
+    return;
+  }
+
+  button.disabled=true;
+  button.textContent="GENERATING...";
+  status.textContent="Preparing your luxury interiors. This may take a few minutes.";
+
+  try{
+    const formData=new FormData();
+    formData.append("image",selectedFile);
+    formData.append("productType",productType);
+    formData.append("company",
+      document.getElementById("company").value);
+    formData.append("tagline",
+      document.getElementById("tagline").value);
+
+    const response=await fetch("/generate",{
+      method:"POST",
+      body:formData
+    });
+
+    const result=await response.json();
+
+    if(!response.ok){
+      throw new Error(result.error || "Image generation failed.");
+    }
+
+    const images=result.images || result.scenes;
+
+    if(!images || images.length < 3){
+      throw new Error("The server did not return all three images.");
+    }
+
+    document.getElementById("hall").src=images[0];
+    document.getElementById("bedroom").src=images[1];
+    document.getElementById("bathroom").src=images[2];
+
+    document.getElementById("results").style.display="block";
+    status.textContent="Success! Your three luxury scenes are ready.";
+    document.getElementById("results").scrollIntoView({
+      behavior:"smooth"
+    });
+
+  }catch(error){
+    status.textContent="Generation failed: "+error.message;
+  }finally{
+    button.disabled=false;
+    button.textContent="GENERATE LUXURY INTERIORS";
+  }
+}
+</script>
+</body>
+</html>
