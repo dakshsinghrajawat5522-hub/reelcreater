@@ -1,49 +1,64 @@
+
 import express from "express";
 import cors from "cors";
 import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(cors());
+app.use(express.static(path.join(__dirname, "public")));
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-app.get("/", (req, res) => {
-  res.send("FloorReel backend is running!");
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", message: "FloorReel backend is running!" });
 });
 
 app.post("/generate", upload.single("image"), async (req, res) => {
   try {
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ error: "Gemini API key is missing." });
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+      return res.status(500).json({
+        error: "Gemini API key is missing in Render environment variables."
+      });
     }
 
     if (!req.file) {
-      return res.status(400).json({ error: "Please upload a product image." });
+      return res.status(400).json({
+        error: "Please upload a product image."
+      });
+    }
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({
+        error: "Upload a JPG, PNG or WebP image."
+      });
     }
 
     const productType = req.body.productType || "Flooring";
-    const mimeType = req.file.mimetype;
-
-    if (!["image/jpeg", "image/png", "image/webp"].includes(mimeType)) {
-      return res.status(400).json({ error: "Use a JPG, PNG or WebP image." });
-    }
 
     const scenes = [
       {
         name: "Luxury living hall",
-        description: "A spacious luxury living room with elegant furniture, premium lighting and sophisticated decor."
+        description: "A spectacular luxury living room with elegant furniture, premium lighting and sophisticated decor."
       },
       {
         name: "Luxury bedroom",
-        description: "A beautiful luxury bedroom with a designer bed, warm ambient lighting and elegant interior styling."
+        description: "A beautiful premium bedroom with a designer bed, warm ambient lighting and elegant furniture."
       },
       {
         name: "Luxury bathroom",
-        description: "A premium modern bathroom with elegant fixtures, refined lighting and sophisticated interior design."
+        description: "A premium modern bathroom with refined fixtures, beautiful lighting and sophisticated design."
       }
     ];
 
@@ -51,26 +66,27 @@ app.post("/generate", upload.single("image"), async (req, res) => {
 
     for (const scene of scenes) {
       const prompt = `
-Create a completely NEW, photorealistic luxury interior photograph.
+Create a completely NEW photorealistic luxury interior photograph.
 
 ROOM: ${scene.description}
 
 PRODUCT TYPE: ${productType}.
 
-Use the uploaded image as a visual product reference.
+Use the uploaded photograph as the visual reference for the product.
 ${productType === "Flooring"
-  ? "Apply the referenced flooring material naturally across the entire visible floor."
-  : "Apply the referenced PVC wall panel material naturally to a prominent interior wall."}
+  ? "The referenced material must appear naturally installed across the visible floor."
+  : "The referenced PVC wall panel must appear naturally installed on a prominent wall."}
 
 IMPORTANT:
-- Generate the entire room from scratch.
-- Do NOT crop, paste, overlay, or cut out the uploaded image.
-- Do NOT create a collage or show the uploaded sample as a separate object.
-- Reproduce its visible colour, grain, texture and pattern as closely as possible.
-- Make the material look naturally installed in the room.
-- Keep the room realistic, premium and professionally photographed.
+- Generate the complete room from scratch.
+- Never crop, cut out, paste or overlay the uploaded sample.
+- Do not create a collage.
+- Reproduce the reference colour, grain, texture and pattern as closely as possible.
+- Make the product look naturally installed.
+- Use realistic interior lighting, shadows and reflections.
+- Premium architectural photography.
 - Vertical 9:16 composition.
-- No text, watermark or logo.
+- No text, logo or watermark.
 `;
 
       const response = await fetch(
@@ -79,14 +95,14 @@ IMPORTANT:
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-goog-api-key": process.env.GEMINI_API_KEY
+            "x-goog-api-key": apiKey
           },
           body: JSON.stringify({
             contents: [{
               parts: [
                 {
                   inlineData: {
-                    mimeType,
+                    mimeType: req.file.mimetype,
                     data: req.file.buffer.toString("base64")
                   }
                 },
@@ -104,7 +120,7 @@ IMPORTANT:
 
       if (!response.ok) {
         throw new Error(
-          result.error?.message || "Gemini image generation failed."
+          result.error?.message || `AI request failed: ${response.status}`
         );
       }
 
@@ -112,7 +128,9 @@ IMPORTANT:
       const imagePart = parts.find(part => part.inlineData?.data);
 
       if (!imagePart) {
-        throw new Error("Gemini did not return an image. Try again.");
+        throw new Error(
+          `AI did not return an image for ${scene.name}.`
+        );
       }
 
       images.push(
@@ -124,12 +142,13 @@ IMPORTANT:
 
   } catch (error) {
     console.error("Generation error:", error);
-    res.status(500).json({ error: error.message });
+
+    res.status(500).json({
+      error: error.message || "Unexpected server error."
+    });
   }
 });
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`FloorReel server running on port ${PORT}`);
+app.listen(process.env.PORT || 3000, "0.0.0.0", () => {
+  console.log("FloorReel AI server started.");
 });
